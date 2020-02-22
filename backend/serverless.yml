@@ -1,10 +1,11 @@
 service:
-  name: serverless-todo-app
+  name: serverless-todo
 
 plugins:
   - serverless-webpack
-  - serverless-reqvalidator-plugin
   - serverless-aws-documentation
+  - serverless-reqvalidator-plugin
+  - serverless-iam-roles-per-function
 
 provider:
   name: aws
@@ -15,6 +16,8 @@ provider:
 
   environment: 
     TODOS_TABLE: Todos-${self:provider.stage}
+    ASSETS_BUCKET: todos-assets-${self:provider.stage}
+    USER_INDEX: userId
 
   iamRoleStatements:
     - Effect: Allow
@@ -22,7 +25,20 @@ provider:
         - dynamodb:Scan
         - dynamodb:PutItem
         - dynamodb:GetItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:Query
       Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+    - Effect: Allow
+      Action:
+        - s3:PutObject
+        - s3:GetObject
+      Resource: arn:aws:s3:::${self:provider.environment.ASSETS_BUCKET}/*
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+      Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_INDEX}
+
 
 custom:
   documentations:
@@ -31,15 +47,11 @@ custom:
         version: v0.0.1
         title: Todo Api
         description: Serverless todo list
-    models:
-      - name: TodoRequest
-        contentType: application/json
-        schema: ${file(models/create-todo-request.json)}
 
 functions:
-
-  #Auth:
-  #  handler: src/lambda/auth/auth0Authorizer.handler
+  Auth:
+    handler: src/lambda/auth/auth0Authorizer.handler
+    cors: true
 
   GetTodos:
     handler: src/lambda/http/getTodos.handler
@@ -47,8 +59,9 @@ functions:
       - http:
           method: get
           path: todos
+          authorizer: Auth
           cors: true
-
+      
   CreateTodo:
     handler: src/lambda/http/createTodo.handler
     events:
@@ -56,56 +69,98 @@ functions:
           method: post
           path: todos
           cors: true
-          reqValidatiorName: RequestBodyValidator
-          documentation:
-            summary: Create a new todo
-            description: Create a new todo
+          authorizer: Auth
+          reqValidatorName: RequestBodyValidator
+          documentation: 
+            summary: create a todo
+            description: create a todo
             requestModels:
-              'application/json': TodoRequest
+              'application/json': CreateTodo
 
-  # TODO: Configure this function
-  #UpdateTodo:
-  #  handler: src/lambda/http/updateTodo.handler
-  #  events:
-  #    - http:
-  #        method: patch
-  #        path: todos/{todoId}
+  UpdateTodo:
+    handler: src/lambda/http/updateTodo.handler
+    events:
+      - http:
+          method: patch
+          path: todos/{todoId}
+          authorizer: Auth
+          cors: true
+          reqValidatorName: RequestBodyValidator
+          documentation: update a todo
+          description: update a todo
+          requestModels: 
+            'application/json': UpdateTodo
+          
+  DeleteTodo:
+    handler: src/lambda/http/deleteTodo.handler
+    events:
+      - http:
+          method: delete
+          path: todos/{todoId}
+          authorizer: Auth
 
-  # TODO: Configure this function
-  #DeleteTodo:
-  #  handler: src/lambda/http/deleteTodo.handler
-  #  events:
-  #    - http:
-  #        method: delete
-  #        path: todos/{todoId}
-
-  # TODO: Configure this function
-  #GenerateUploadUrl:
-  #  handler: src/lambda/http/generateUploadUrl.handler
-  #  events:
-  #    - http:
-  #        method: post
-  #        path: todos/{todoId}/attachment
+  GenerateUploadUrl:
+    handler: src/lambda/http/generateUploadUrl.handler
+    events:
+      - http:
+          method: post
+          path: todos/{todoId}/attachment
+          authorizer: Auth
+          cors: true
 
 resources:
   Resources:
-    TodosDynamoDBTable:
+    RequestBodyValidator:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties:
+        Name: 'request-body-validator'
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+        ValidateRequestBody: true
+        ValidateRequestParameters: false
+    GatewayResponseDefault4XX:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type, X-Amz-Date,Authorization'"
+          gatewayresponse.header.Access-Control-Allow-Methods: "'GET, OPTIONS, POST'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+
+    TodosDynamoDbTable:
       Type: AWS::DynamoDB::Table
       Properties:
         AttributeDefinitions:
-          - AttributeName: id
+          - AttributeName: todoId
+            AttributeType: S
+          - AttributeName: userId
             AttributeType: S
         KeySchema:
-          - AttributeName: id
+          - AttributeName: todoId
             KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: ${self:provider.environment.USER_INDEX}
+            KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            Projection:
+              ProjectionType: ALL
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.TODOS_TABLE}
     
-    RequestBodyValidator:
-      Type: AWS::ApiGateway::RequestValidator
-      Properties: 
-        Name: 'request-body-validator'
-        RestApiId:
-          Ref: ApiGatewayRestApi
-        ValidateRequestBody: true
-        ValidateRequestParameters: false
+    AssetsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.ASSETS_BUCKET}
+        CorsConfiguration:
+          CorsRules:
+            - AllowedHeaders:
+                - "*"
+              AllowedMethods:
+                - GET
+                - POST
+                - PUT
+              AllowedOrigins:
+                - "*"

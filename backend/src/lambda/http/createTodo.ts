@@ -4,6 +4,7 @@ import 'source-map-support/register'
 import * as AWS  from 'aws-sdk'
 import * as uuid from 'uuid'
 import { TodoItem } from '../../models/TodoItem'
+import { getUserId } from '../utils'
 
 const docClient = new AWS.DynamoDB.DocumentClient()
 const todosTable = process.env.TODOS_TABLE
@@ -11,11 +12,14 @@ const todosTable = process.env.TODOS_TABLE
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   console.log('Processing event: ', event)
   const todoId = uuid.v4()
+  const userId = getUserId(event)
 
   const parsedBody = JSON.parse(event.body)
   
   const newTodo: TodoItem = {
-    id: todoId,
+    todoId: todoId,
+    userId: userId,
+    done: false,
     createdAt: Date.now(),
     ...parsedBody
   }
@@ -27,8 +31,10 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
 
   return {
     statusCode: 201,
-    headers: {'Access-Control-Allow-Origin': '*'
-  },
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Credentials': true
+    },
     body: JSON.stringify({
       newTodo
     })
