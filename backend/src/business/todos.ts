@@ -11,3 +11,7 @@ export async function getAllTodosForUser(userId: string): Promise<TodoItem[]> {
 export async function updateTodo(todoId: string, updateTodo: UpdateTodoRequest): Promise<void> {
     return todosAccess.updateTodo(todoId, updateTodo);
 }
+
+export async function deleteTodo(todoId: string): Promise<void> {
+    return todosAccess.deleteTodo(todoId);
+}

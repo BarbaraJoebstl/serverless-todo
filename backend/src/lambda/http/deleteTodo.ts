@@ -2,13 +2,14 @@ import 'source-map-support/register'
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
 import { getUserId } from '../utils'
-import { TodosAccess } from '../../dataLayer/todosAccess'
 import { ApiResponse } from '../../utils/api-response'
 import { createLogger } from '../../utils/logger'
+import { deleteTodo } from '../../business/todos'
+import { TodosAccess } from '../../dataLayer/todosAccess'
 
 const logger = createLogger('todos')
 const apiResponse = new ApiResponse()
-const todosAccess = new TodosAccess()
+const accessTodos = new TodosAccess()
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const todoId = event.pathParameters.todoId
@@ -18,13 +19,13 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   }
 
   const userId = getUserId(event)
-  const selectedTodo = await todosAccess.getTodoById(todoId)
+  const selectedTodo = await accessTodos.getTodoById(todoId)
   if(!selectedTodo) {
     logger.error('ERROR DELETE - no item found with that id')
     return apiResponse.errorResponse(404, 'no item found with that id')
   }
 
   logger.info(`DELETE Todo ${todoId} for user ${userId}`)
-  await todosAccess.deleteTodo(todoId)
+  await deleteTodo(todoId)
   return apiResponse.emptySuccessResponse()
 }

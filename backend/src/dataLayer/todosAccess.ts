@@ -43,7 +43,7 @@ export class TodosAccess {
         return newTodo
     }
 
-    async deleteTodo(todoId: string){
+    async deleteTodo(todoId: string) {
         const deleteParams = {
             TableName: this.todosTable,
             Key: {
@@ -54,7 +54,7 @@ export class TodosAccess {
         await this.docClient.delete(deleteParams).promise()
     }
 
-    async getTodoById(todoId: string){
+    async getTodoById(todoId: string) {
         return await this.docClient.query({
             TableName: this.todosTable,
             KeyConditionExpression: 'todoId = :todoId',
@@ -62,6 +62,7 @@ export class TodosAccess {
                 ':todoId': todoId
             }
         }).promise()
+
     }
 
     async updateTodo(todoId: string, updatedTodo: UpdateTodoRequest) {
@@ -77,7 +78,7 @@ export class TodosAccess {
             ExpressionAttributeNames: {
                 '#namefield': 'name'
             }
-        }).promise
+        }).promise()
     }
 
 }
