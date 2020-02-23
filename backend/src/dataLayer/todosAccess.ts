@@ -7,7 +7,7 @@ import * as AWS  from 'aws-sdk'
 export class TodosAccess {
     constructor(
         private readonly docClient = new AWS.DynamoDB.DocumentClient(),
-        private readonly todosTable = process.env.GROUPS_TABLE,
+        private readonly todosTable = process.env.TODOS_TABLE,
         private readonly userIndex = process.env.USER_INDEX
     ){ }
 

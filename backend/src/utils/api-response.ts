@@ -6,7 +6,8 @@ export class ApiResponse {
         return {
             statusCode: statusCode,
             headers: {
-                'Access-Control-Allow-Origin':'*'
+                'Access-Control-Allow-Origin':'*',
+                'Access-Control-Allow-Credentials': true
             },
             body: JSON.stringify({
                 [key]: values
@@ -19,7 +20,8 @@ export class ApiResponse {
         return {
             statusCode: 204,
             headers: {
-            'Access-Control-Allow-Origin':'*'
+            'Access-Control-Allow-Origin':'*',
+            'Access-Control-Allow-Credentials': true
         },
             body: null
         }
@@ -29,7 +31,8 @@ export class ApiResponse {
         return {
             statusCode: statusCode,
             headers: {
-                'Access-Control-Allow-Origin':'*'
+                'Access-Control-Allow-Origin':'*',
+                'Access-Control-Allow-Credentials': true
             },
             body: JSON.stringify({
               message
