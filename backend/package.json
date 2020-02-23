@@ -1,12 +1,13 @@
 {
   "name": "serverless-todo-app",
   "version": "1.0.0",
-  "description": "Serverless TODO image app",
+  "description": "Serverless TODO app",
   "dependencies": {
     "@types/axios": "^0.14.0",
     "@types/http-errors": "^1.6.3",
     "aws-xray-sdk": "^2.5.0",
     "axios": "^0.19.2",
+    "cors": "^2.8.5",
     "http-errors": "^1.7.3",
     "jsonwebtoken": "^8.5.1",
     "middy": "^0.27.1",
@@ -28,6 +29,6 @@
     "typescript": "^3.8.2",
     "webpack": "^4.41.6"
   },
-  "author": "Ivan Mushketyk",
+  "author": "Ivan Mushketyk, Barbara Jöbstl",
   "license": "MIT"
 }

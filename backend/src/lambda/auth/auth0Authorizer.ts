@@ -8,7 +8,7 @@ import { Jwt } from '../../auth/Jwt'
 import Axios from 'axios'
 
 const logger = createLogger('auth')
-const jwksUrl = '...'
+const jwksUrl = 'https://dev-l8u10djm.eu.auth0.com/pem'
 
 export const handler = async (event: CustomAuthorizerEvent): Promise<CustomAuthorizerResult> => {
   logger.info('Authorizing a user', event.authorizationToken)
@@ -59,7 +59,7 @@ async function verifyToken(authHeader: string): Promise<JwtPayload> {
   
   try {
     const response = await Axios.get(jwksUrl);
-    var verifiedToken = verify(token,response.data,{algorithms:['RS256']})
+    var verifiedToken = verify(token, response.data, {algorithms:['RS256']})
 
     return verifiedToken as JwtPayload
   } catch (error) {
