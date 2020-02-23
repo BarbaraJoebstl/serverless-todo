@@ -2,11 +2,13 @@ import { TodoItem } from '../models/TodoItem';
 import * as uuid from 'uuid';
 import { CreateTodoRequest } from '../requests/CreateTodoRequest';
 import { UpdateTodoRequest } from '../requests/UpdateTodoRequest';
-import * as AWS  from 'aws-sdk'
+import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+
+const AWSXRay = require('aws-xray-sdk')
 
 export class TodosAccess {
     constructor(
-        private readonly docClient = new AWS.DynamoDB.DocumentClient(),
+        private readonly docClient: DocumentClient = createDynamoDBClient(),
         private readonly todosTable = process.env.TODOS_TABLE,
         private readonly userIndex = process.env.USER_INDEX
     ){ }
@@ -82,3 +84,15 @@ export class TodosAccess {
     }
 
 }
+
+function createDynamoDBClient() {
+    if (process.env.IS_OFFLINE) {
+      console.log('Creating a local DynamoDB instance')
+      return new AWSXRay.DynamoDB.DocumentClient({
+        region: 'localhost',
+        endpoint: 'http://localhost:8000'
+      })
+    }
+  
+    return new AWSXRay.DynamoDB.DocumentClient()
+  }

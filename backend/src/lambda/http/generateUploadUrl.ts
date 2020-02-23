@@ -7,6 +7,7 @@ import { S3Helper } from '../../utils/s3-helper'
 
 const todosAccess = new TodosAccess()
 const apiResponse = new ApiResponse()
+const s3Helper = new S3Helper()
 const logger = createLogger('todos')
 
 
@@ -19,11 +20,13 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
     return apiResponse.errorResponse(400, 'no existing todo')
   }
 
-  const url = new S3Helper().getPresignedUrl(todoId)
+  const url = s3Helper.getPresignedUrl(todoId)
 
   return {
     statusCode: 200,
-    headers: {'Access-Control-Allow-Origin':'*'},
+    headers: {
+      'Access-Control-Allow-Origin':'*'
+    },
     body: JSON.stringify({ 
       'uploadUrl': url
     })
