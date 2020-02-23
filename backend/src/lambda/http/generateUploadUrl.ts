@@ -12,10 +12,10 @@ const logger = createLogger('todos')
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const todoId = event.pathParameters.todoId
-
   const todo = await todosAccess.getTodoById(todoId)
+  
   if(!todo) {
-    logger.error(`ADD ATTACHEMENT ERROR - ther is no todo item`)
+    logger.error(`ADD ATTACHEMENT ERROR - there is no todo item`)
     return apiResponse.errorResponse(400, 'no existing todo')
   }
 

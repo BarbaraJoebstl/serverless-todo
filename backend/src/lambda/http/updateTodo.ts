@@ -19,8 +19,8 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
     logger.error('UPDATE ERROR - no todo with id ${todoId} found')
     return apiResponse.errorResponse(400, 'no todo with id ${todoId} found')
   }
-  const updatedTodo: UpdateTodoRequest = JSON.parse(event.body)
   
+  const updatedTodo: UpdateTodoRequest = JSON.parse(event.body)
   logger.info('UPDATE - item ${todoId} for user ${userId}')
   await todosAccess.updateTodo(todoId, updatedTodo)
   return apiResponse.emptySuccessResponse()
