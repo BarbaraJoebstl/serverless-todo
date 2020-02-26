@@ -100,7 +100,7 @@ export class TodosAccess {
             Key: { 'todoId': todoId },
             UpdateExpression: 'set #attachmentUrl = :a',
             ExpressionAttributeValues: {
-                ':a': `https://www.${s3BucketName}.s3.eu-central-1.amazonaws.com/${todoId}.png`
+                ':a': `${s3BucketName}.s3.eu-central-1.amazonaws.com/${todoId}.png`
             },
             ExpressionAttributeNames: {
                 '#attachmentUrl': 'attachmentUrl'
