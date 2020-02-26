@@ -18,4 +18,3 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   const createdTodo = await new TodosAccess().createTodo(todo, userId);
   return apiResponse.successResponse(201, 'item', createdTodo)
 }
-

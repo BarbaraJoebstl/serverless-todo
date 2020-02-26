@@ -15,13 +15,15 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   const todoId = event.pathParameters.todoId
   const todo = await todosAccess.getTodoById(todoId)
 
+
   if(!todo) {
     logger.error(`ADD ATTACHEMENT ERROR - there is no todo item`)
     return apiResponse.errorResponse(400, 'no existing todo')
   }
 
   const url = s3Helper.getPresignedUrl(todoId)
-
+  await todosAccess.addAttachmentUrl(todoId);
+  
   return {
     statusCode: 200,
     headers: {

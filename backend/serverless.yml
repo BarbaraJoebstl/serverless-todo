@@ -6,6 +6,7 @@ plugins:
   - serverless-aws-documentation
   - serverless-reqvalidator-plugin
   - serverless-iam-roles-per-function
+  - serverless-plugin-tracing
 
 provider:
   name: aws
@@ -15,10 +16,14 @@ provider:
   region: ${opt:region, 'eu-central-1'}
 
   environment: 
-    TODOS_TABLE: Todos-${self:provider.stage}
+    TODOS_TABLE: todos-db-${self:provider.stage}
     ASSETS_BUCKET: todos-assets-${self:provider.stage}
     USER_INDEX: userId
     IS_OFFLINE: false
+  
+  tracing:
+    lambda: true
+    apiGateway: true
 
 custom:
   documentations:
@@ -51,6 +56,11 @@ functions:
         Action:
           - dynamodb:Query
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_INDEX}
+      - Effect: "Allow"
+        Action:
+          - xray:PutTelemetryRecords
+          - xray:PutTraceSegments
+        Resource: "*"
 
   CreateTodo:
     handler: src/lambda/http/createTodo.handler
@@ -201,5 +211,21 @@ resources:
                 - GET
                 - POST
                 - PUT
+                - DELETE
+                - HEAD
               AllowedOrigins:
                 - "*"
+
+    BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        PolicyDocument:
+          Id: MyPolicy
+          Version: "2012-10-17"
+          Statement:
+            - Sid: PublicReadForGetBucketObjects
+              Effect: Allow
+              Principal: '*'
+              Action: 's3:GetObject'
+              Resource: 'arn:aws:s3:::${self:provider.environment.ASSETS_BUCKET}/*'
+        Bucket: !Ref AssetsBucket
